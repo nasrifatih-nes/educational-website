@@ -2,81 +2,127 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم الأستاذ</title>
+    <title>لوحة تحكم الأستاذ - ناصري فاتح</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/admin">لوحة التحكم الخاصة بالأستاذ ناصري فاتح</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/" target="_blank">معاينة الموقع كزائر</a>
-            </div>
-        </div>
-    </nav>
-
+<body class="bg-light p-4">
     <div class="container">
-        <!-- نموذج إضافة درس جديد -->
-        <div class="card shadow-sm mb-5">
-            <div class="card-header bg-dark text-white">إضافة درس جديد للمنصة</div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label">عنوان الدرس:</label>
-                        <input type="text" name="title" class="form-control" required placeholder="مثال: التركيب الضوئي وآلياته">
+        <h1 class="mb-4 text-primary">⚙️ لوحة التحكم في المنصة التعليمية</h1>
+        
+        <!-- نموذج إضافة درس / تمرين / فرض / اختبار -->
+        <div class="card shadow p-4 mb-5">
+            <h3 class="mb-3">إضافة محتوى جديد (درس، تمرين، فرض، اختبار)</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">عنوان العنصر</label>
+                        <input type="text" name="title" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">اختر ملف الدرس (PDF, Word, صورة):</label>
-                        <input type="file" name="file" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">نوع الاشتراك المطلوب للتحميل:</label>
-                        <select name="sub_type" class="form-select">
-                            <option value="مجاني بالكامل">مجاني بالكامل</option>
-                            <option value="اشتراك رمزي">اشتراك رمزي</option>
+                    <div class="col-md-3">
+                        <label class="form-label">التصنيف</label>
+                        <select name="category" class="form-select">
+                            <option value="lesson">درس</option>
+                            <option value="exercise">تمرين</option>
+                            <option value="homework">فرض منزلي</option>
+                            <option value="exam">اختبار</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-success">رفع وإضافة الدرس</button>
-                </form>
-            </div>
+                    <div class="col-md-3">
+                        <label class="form-label">المستوى الدراسي</label>
+                        <input type="text" name="level" class="form-control" placeholder="مثال: 3 ثانوي علوم" required>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">نوع الملف (تحديد السعر)</label>
+                        <select name="file_type" class="form-select">
+                            <option value="pdf">ملف PDF (اشتراك مخفض)</option>
+                            <option value="word">ملف Word قابلة للتعديل (اشتراك أعلى)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">سعر التحميل (دج / أو قيمة الاشتراك)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" value="100">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" name="is_subscription_required" id="subCheck">
+                            <label class="form-check-label" for="subCheck">يتطلب اشتراك خاص</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">مصدر الملف</label>
+                        <select name="file_source_type" class="form-select" id="sourceType" onchange="toggleSource()">
+                            <option value="local">رفع من الحاسوب مباشرة</option>
+                            <option value="drive">رابط Google Drive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-8" id="localField">
+                        <label class="form-label">اختر الملف من جهازك</label>
+                        <input type="file" name="local_file" class="form-control">
+                    </div>
+                    
+                    <div class="col-md-8 d-none" id="driveField">
+                        <label class="form-label">أدخل رابط Google Drive المباشر</label>
+                        <input type="url" name="drive_url" class="form-control" placeholder="https://drive.google.com/...">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">وصف موجز للمحتوى</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success w-100 py-2">نشر المحتوى على المنصة</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <!-- قائمة الدروس المرفوعة للإدارة -->
-        <div class="card shadow-sm mb-5">
-            <div class="card-header bg-secondary text-white">قائمة الدروس المتاحة في المنصة</div>
-            <div class="card-body">
-                <table class="table table-striped text-center align-middle">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>عنوان الدرس</th>
-                            <th>نوع الملف</th>
-                            <th>نوع الاشتراك</th>
-                            <th>الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if lessons %}
-                            {% for lesson in lessons %}
-                            <tr>
-                                <td>{{ lesson.id }}</td>
-                                <td>{{ lesson.title }}</td>
-                                <td>{{ lesson.filename.split('.')[-1].upper() }}</td>
-                                <td>{{ lesson.sub_type }}</td>
-                                <td>
-                                    <a href="{{ url_for('uploaded_file', filename=lesson.filename) }}" class="btn btn-sm btn-primary" target="_blank">معاينة</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="5" class="text-muted py-3">لا توجد دروس مرفوعة حالياً.</td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- جدول المحتويات الحالية مع خيار الحذف -->
+        <h3 class="mb-3">المحتويات المنشورة حالياً</h3>
+        <table class="table table-bordered table-striped bg-white shadow">
+            <thead>
+                <tr>
+                    <th>العنوان</th>
+                    <th>التصنيف</th>
+                    <th>المستوى</th>
+                    <th>النوع</th>
+                    <th>السعر / الاشتراك</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.level }}</td>
+                    <td><span class="badge bg-{{ 'danger' if item.file_type == 'pdf' else 'primary' }}">{{ item.file_type.upper() }}</span></td>
+                    <td>{{ item.price }} دج</td>
+                    <td>
+                        <form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من الحذف؟')">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+
+    <script>
+        function toggleSource() {
+            let type = document.getElementById('sourceType').value;
+            if(type === 'local') {
+                document.getElementById('localField').classList.remove('d-none');
+                document.getElementById('driveField').classList.add('d-none');
+            } else {
+                document.getElementById('localField').classList.add('d-none');
+                document.getElementById('driveField').classList.remove('d-none');
+            }
+        }
+    </script>
 </body>
 </html>

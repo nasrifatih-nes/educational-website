@@ -1,60 +1,97 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import os
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'nasrifatih_secret_key_2026'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///educational_platform.db'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # حد أقصى 50 ميغا للرفع
 
-# إعداد مسار حفظ الملفات المرفوعة
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+db = SQLAlchemy(app)
 
-# قاعدة بيانات مؤقتة لتخزين الدروس
-lessons_db = []
+# --- جدول المحتوى التعليمي (دروس، تمارين، فروض، اختبارات) ---
+class ContentItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # lesson, exercise, homework, exam
+    level = db.Column(db.String(100), nullable=False)     # السنة الأولى، الثانية، الثالثة ثانوي...
+    description = db.Column(db.Text, nullable=True)
+    
+    # نوع الملف وسعره وطريقة الاشتراك
+    file_type = db.Column(db.String(20), nullable=False)     # 'pdf' أو 'word'
+    price = db.Column(db.Float, default=0.0)                 # سعر التحميل (أقل للـ PDF وأعلى للـ Word مثلاً)
+    is_subscription_required = db.Column(db.Boolean, default=False)
+    
+    # رابط الملف (إما مرفوع محلياً أو رابط Google Drive)
+    file_source_type = db.Column(db.String(20), default='local') # 'local' أو 'drive'
+    file_path_or_url = db.Column(db.String(500), nullable=False)
 
-# --- واجهات التلاميذ العامة ---
+with app.app_context():
+    db.create_all()
+
+# --- واجهة التلاميذ والزوار (الاطلاع والتصفح) ---
 @app.route('/')
-def index():
-    return render_template('index.html', lessons=lessons_db)
+def home():
+    return render_template('index.html')
 
 @app.route('/lessons')
-def student_lessons():
-    return render_template('lessons.html', lessons=lessons_db)
+def lessons():
+    items = ContentItem.query.all()
+    return render_template('lessons.html', items=items)
 
-@app.route('/exercises')
-def student_exercises():
-    return render_template('exercises.html')
-
-@app.route('/exams')
-def student_exams():
-    return render_template('exams.html')
-
-# --- لوحة تحكم الأستاذ (الخاصة بك وحدك عبر رابط /admin) ---
+# --- لوحة التحكم الخاصة بالأستاذ (الإضافة والحذف والتحكم الشامل) ---
 @app.route('/admin', methods=['GET', 'POST'])
-def admin_dashboard():
+def admin():
     if request.method == 'POST':
         title = request.form.get('title')
-        file = request.files.get('file')
-        sub_type = request.form.get('sub_type')
+        category = request.form.get('category')
+        level = request.form.get('level')
+        description = request.form.get('description')
+        file_type = request.form.get('file_type')         # 'pdf' أو 'word'
+        price = float(request.form.get('price', 0.0))
+        is_sub = True if request.form.get('is_subscription_required') == 'on' else False
         
-        if file and title:
-            filename = file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            
-            lessons_db.append({
-                'id': len(lessons_db) + 1,
-                'title': title,
-                'filename': filename,
-                'sub_type': sub_type
-            })
-            return redirect(url_for('admin_dashboard'))
-            
-    return render_template('admin.html', lessons=lessons_db)
+        source_type = request.form.get('file_source_type') # 'local' أو 'drive'
+        file_url = ""
 
-# مسار لتحميل الملفات المرفوعة
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+        if source_type == 'local':
+            file = request.files.get('local_file')
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file_url = url_for('static', filename=f'uploads/{filename}')
+        else:
+            file_url = request.form.get('drive_url', '')
+
+        new_item = ContentItem(
+            title=title,
+            category=category,
+            level=level,
+            description=description,
+            file_type=file_type,
+            price=price,
+            is_subscription_required=is_sub,
+            file_source_type=source_type,
+            file_path_or_url=file_url
+        )
+        db.session.add(new_item)
+        db.session.commit()
+        flash('تمت إضافة العنصر بنجاح!', 'success')
+        return redirect(url_for('admin'))
+
+    items = ContentItem.query.all()
+    return render_template('admin.html', items=items)
+
+@app.route('/admin/delete/<int:item_id>', methods=['POST'])
+def delete_item(item_id):
+    item = ContentItem.query.get_or_404(item_id)
+    db.session.delete(item)
+    db.session.commit()
+    flash('تم حذف العنصر بنجاح!', 'danger')
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
