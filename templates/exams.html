@@ -1,93 +1,25 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>بنك الفروض والاختبارات والتصحيحات</h2>
-
-<form method="GET" action="{{ url_for('exams_page') }}" style="background: #eef2f3; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-    <div style="margin-bottom: 10px;">
-        <label><strong>المستوى الدراسي:</strong></label><br>
-        <select name="level" style="padding: 8px; width: 100%; margin-top: 5px;">
-            <option value="">-- كل المستويات --</option>
-            {% for lvl in levels %}
-                <option value="{{ lvl }}" {% if request.args.get('level') == lvl %}selected{% endif %}>{{ lvl }}</option>
-            {% endfor %}
-        </select>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الفروض والاختبارات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">المنصة التعليمية - الأستاذ ناصري فاتح</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">الرئيسية</a>
+                <a class="nav-link" href="/lessons">الدروس</a>
+                <a class="nav-link" href="/exercises">التمارين</a>
+                <a class="nav-link active" href="/exams">الفروض والاختبارات</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container text-center py-5">
+        <h2>قسم الفروض والاختبارات</h2>
+        <p class="text-muted">قريباً سيتم إدراج نماذج الاختبارات المصححة.</p>
     </div>
-    
-    <div style="margin-bottom: 10px;">
-        <label><strong>الفصل الدراسي:</strong></label><br>
-        <select name="semester" style="padding: 8px; width: 100%; margin-top: 5px;">
-            <option value="">-- كل الفصول --</option>
-            {% for sem in semesters %}
-                <option value="{{ sem }}" {% if request.args.get('semester') == sem %}selected{% endif %}>{{ sem }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div style="margin-bottom: 15px;">
-        <label><strong>النوع:</strong></label><br>
-        <select name="type" style="padding: 8px; width: 100%; margin-top: 5px;">
-            <option value="">-- الكل (فرض / اختبار) --</option>
-            <option value="فرض" {% if request.args.get('type') == 'فرض' %}selected{% endif %}>فرض</option>
-            <option value="اختبار" {% if request.args.get('type') == 'اختبار' %}selected{% endif %}>اختبار</option>
-        </select>
-    </div>
-    
-    <button type="submit" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">بحث وتصفية</button>
-    <a href="{{ url_for('add_exam') }}" style="float: left; background: #27ae60; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; font-size: 14px;">+ إضافة فرض أو اختبار جديد</a>
-</form>
-
-<hr style="margin: 20px 0;">
-
-<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; background: white; text-align: right;">
-    <tr style="background: #34495e; color: white;">
-        <th>العنوان</th>
-        <th>النوع</th>
-        <th>المستوى</th>
-        <th>الفصل</th>
-        <th>الموضوع واشتراكه</th>
-        <th>التصحيح واشتراكه</th>
-    </tr>
-    {% if exams %}
-        {% for exam in exams %}
-        <tr>
-            <td><strong>{{ exam[1] }}</strong></td>
-            <td>{{ exam[2] }}</td>
-            <td>{{ exam[3] }}</td>
-            <td>{{ exam[4] }}</td>
-            <td>
-                {% if exam[5] %}
-                    <a href="{{ exam[5] }}" target="_blank">تحميل الموضوع</a><br>
-                    {% if exam[6] == 'pdf_sub' %}
-                        <span class="badge-pdf">اشتراك PDF فصلي</span>
-                    {% elif exam[6] == 'word_sub' %}
-                        <span class="badge-word">اشتراك Word فصلي</span>
-                    {% else %}
-                        <span class="badge-free">مجاني</span>
-                    {% endif %}
-                {% else %}
-                    غير متوفر
-                {% endif %}
-            </td>
-            <td>
-                {% if exam[7] %}
-                    <a href="{{ exam[7] }}" target="_blank">تحميل التصحيح</a><br>
-                    {% if exam[8] == 'pdf_sub' %}
-                        <span class="badge-pdf">اشتراك PDF فصلي</span>
-                    {% elif exam[8] == 'word_sub' %}
-                        <span class="badge-word">اشتراك Word فصلي</span>
-                    {% else %}
-                        <span class="badge-free">مجاني</span>
-                    {% endif %}
-                {% else %}
-                    غير متوفر
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    {% else %}
-        <tr>
-            <td colspan="6" style="text-align: center; color: #7f8c8d; padding: 20px;">لا توجد فروض أو اختبارات مطابقة لبحثك حالياً.</td>
-        </tr>
-    {% endif %}
-</table>
-{% endblock %}
+</body>
+</html>
